@@ -9,8 +9,12 @@ x = btor.Var(4, "x")
 y = btor.Var(4, "y")
 
 btor.Assert(x * y > 13)
+btor.Assert(y < 4)
 
 result = btor.Sat()
+
+print type(x)
+print type(y)
 
 #print result
 
@@ -24,4 +28,6 @@ while (result == 10):
 	btor.Assert(y != y_val)
 	result = btor.Sat()
 
+print type(x_val)
+print type(y_val)
 print "UNSAT"
