@@ -45,6 +45,8 @@ while (result == 10):
 	print 'G = %d' %int(var[4].assignment,2),
 	print 't = %d' %int(var[5].assignment,2)
 	
+	#btor.Print_model()
+
 	x_val = int(var[0].assignment,2)
 	t1_val = int(var[1].assignment,2)
 	F_val = int(var[2].assignment,2)
