@@ -9,6 +9,54 @@ btor = Boolector();
 btor.Set_opt("model_gen", 1)
 btor.Set_opt("incremental", 1)
 
+def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
+	#tmp = btor.Var(bw+1 , 'tmp')
+	function =  function.replace('-','+ -')
+	function = function.split('+')
+	function[:] = [x.strip() for x in function if x != '']
+	b_func = 0 #Btor poly initialised to 0
+	
+	for mon in function: #Loop runs for all the monomials in the current function
+		if mon[0] == '-': #If the monomial is negative
+			minus = 1
+			mon = list(mon)
+			del mon[0]
+			mon = ''.join(mon)
+		else:
+			minus = 0
+		
+		tmp = 1
+		mon = mon.split('**')
+		if len(mon) == 1: #No exponentiated variables
+			mon = mon[0].split('*')
+			for t in mon:
+				if hf.isint(t):
+					tmp = tmp * int(t.strip())
+				else:
+					tmp = tmp * b_var[var_dir[t.strip()]]
+		else: #Exponentiated variables
+			p_mon_1 = mon[0].split('*')
+			p_mon_2 = mon[1].split('*')
+			for j in range(int(p_mon_2[0].strip())-1):
+				tmp = tmp * b_var[var_dir[p_mon_1[-1].strip()]]
+
+			for t in p_mon_1:
+				if hf.isint(t):
+					tmp = tmp * int(t.strip())
+				else:
+					tmp = tmp * b_var[var_dir[t.strip()]]
+			k = 0		
+			for t in p_mon_2:
+				if k != 0:
+					if hf.isint(t):
+						tmp = tmp * int(t.strip())
+					else:
+						tmp = tmp * b_var[var_dir[t.strip()]]
+				k = 1
+		if minus: #Complements the monomial
+			tmp = - tmp
+		b_func = b_func + tmp
+	return b_func
 
 ############################################################################
 ###################### PARSING THE .POLY INPUT FILE ########################
@@ -57,7 +105,6 @@ for i in range(len(func)):
 #print sym
 func_m = Matrix(func)
 J = func_m.jacobian(sym)
-print J
 
 ############################################################################
 ############################# Boolector Part ###############################
@@ -78,57 +125,13 @@ tmp = btor.Var(bw+1 , 'tmp')
 for i in range(len(func)): #Loop runs for all the polynomials
 	b_func.append( btor.Var(bw+1 , 'f'+str(i)) )
 	function = str(func[i])
-	function =  function.replace('-','+ -')
-	function = function.split('+')
-	function[:] = [x.strip() for x in function if x != '']
-	b_func[i] = 0 #Btor poly initialised to 0
+	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp, bw)
 	
-	for mon in function: #Loop runs for all the monomials in the current function
-		if mon[0] == '-': #If the monomial is negative
-			minus = 1
-			mon = list(mon)
-			del mon[0]
-			mon = ''.join(mon)
-		else:
-			minus = 0
-		
-		tmp = 1
-		mon = mon.split('**')
-		if len(mon) == 1: #No exponentiated variables
-			mon = mon[0].split('*')
-			for t in mon:
-				if hf.isint(t):
-					tmp = tmp * int(t.strip())
-				else:
-					tmp = tmp * b_var[var_dir[t.strip()]]
-		else: #Exponentiated variables
-			p_mon_1 = mon[0].split('*')
-			p_mon_2 = mon[1].split('*')
-			for j in range(int(p_mon_2[0].strip())-1):
-				tmp = tmp * b_var[var_dir[p_mon_1[-1].strip()]]
-
-			for t in p_mon_1:
-				if hf.isint(t):
-					tmp = tmp * int(t.strip())
-				else:
-					tmp = tmp * b_var[var_dir[t.strip()]]
-			k = 0		
-			for t in p_mon_2:
-				if k != 0:
-					if hf.isint(t):
-						tmp = tmp * int(t.strip())
-					else:
-						tmp = tmp * b_var[var_dir[t.strip()]]
-				k = 1
-		if minus: #Complements the monomial
-			tmp = - tmp
-		b_func[i] = b_func[i] + tmp
-
 #############################################
 
 ############### Solving Mod 2################
 for i in range(len(b_func)):
-	btor.Assume(b_func[i] % 8 == 0)
+	btor.Assume(b_func[i] % 2 == 0)
 
 sol_2 = []	
 for i in range(len(var)):
@@ -143,7 +146,7 @@ while result == 10:
 		sol_2[i].append(int (b_var[i].assignment,2))
 
 	for i in range(len(b_func)):
-		btor.Assume(b_func[i] % 8 == 0)
+		btor.Assume(b_func[i] % 2 == 0)
 
 	for i in range(len(sol_2)):
 		for j in range(len(sol_2[i])):
@@ -156,8 +159,27 @@ else:
 		print 'Circuits are equivalent'
 	else:
 		print 'All solution mod 2 found'
-		print sol_2
+		#print sol_2
 
+#############################################
+
+############ Lifting the solutions ##########
+#print J
+try:
+	J_inv = trunc(J,2)**-1
+	je = 1
+except:
+	je = 0
+
+sol = sol_2
+T = []
+b_T = []
+# for i in range(len(var)):
+
+
+# if je == 0:
+# 	for i in range(len(sol[0][0])):
+# 		eqn_sym = 
 #############################################
 
 ############################################################################
