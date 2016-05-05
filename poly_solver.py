@@ -95,7 +95,7 @@ sym = []
 
 for i in range(len(var)):
 	sym.append(symbols(var[i]))
-func_m = Matrix(func)
+#func_m = Matrix(func)
 
 bw = max(mod)
 
@@ -206,6 +206,7 @@ if result != 10:
 	print 'The circuits are equivalent'
 	exit()
 
+print var
 solve(ast)
 print 'All solutions mod 2'
 print sol_2
