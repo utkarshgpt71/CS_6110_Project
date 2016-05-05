@@ -121,7 +121,7 @@ def solve(ast):
 	global sol_2
 	global btor
 
-	print ast
+	#print ast
 
 	for i in range(len(b_func)):
 		btor.Assume(b_func[i] % 2 == 0)
@@ -134,7 +134,7 @@ def solve(ast):
 			btor.Assume(b_var[i] != ast[i][j])
 
 	result = btor.Sat()
-	print result
+	#print result
 	curr_sol = []
 	
 	if result != 10:
@@ -155,9 +155,9 @@ def solve(ast):
 		else:
 			if curr_sol[i] not in ast_ts[i]:
 				ast_ts[i].append(curr_sol[i])
-			for j in range(len(curr_sol)-1):
-				if (1-curr_sol[i]) not in ast_ts[i]:
-					ast_ts[i].append( (1-curr_sol[i]) )
+			for j in range(i):
+				if (1-curr_sol[j]) not in ast_ts[j]:
+					ast_ts[j].append( (1-curr_sol[j]) )
 			#print ast_ts
 			solve(ast_ts)
 
@@ -206,10 +206,10 @@ if result != 10:
 	print 'The circuits are equivalent'
 	exit()
 
-print var
+#print var
 solve(ast)
 print 'All solutions mod 2'
-print sol_2
+hf.print_sol(var,sol_2)
 #print var
 #print sol_2
 
