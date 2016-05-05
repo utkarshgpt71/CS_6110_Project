@@ -7,7 +7,7 @@ print "Hello"
 
 var = []
 bit = 4
-mod = 8
+mod = 2
 var.append(btor.Var(bit, 'x'))
 var.append(btor.Var(bit, 't1'))
 var.append(btor.Var(bit, 'F'))
@@ -16,12 +16,12 @@ var.append(btor.Var(bit, 'G'))
 var.append(btor.Var(bit, 't'))
 #var.append(btor.Var(2, 'z'))
 
-btor.Assert(var[0] < 4)
-btor.Assert(var[1] < 4)
-btor.Assert(var[2] < 8)
-btor.Assert(var[3] < 4)
-btor.Assert(var[4] < 8)
-btor.Assert(var[5] < 8)
+btor.Assert(var[0] < mod)
+btor.Assert(var[1] < mod)
+btor.Assert(var[2] < mod)
+btor.Assert(var[3] < mod)
+btor.Assert(var[4] < mod)
+btor.Assert(var[5] < mod)
 
 
 btor.Assert( (2*var[0]*var[0] - 2*var[1]) % mod == 0)

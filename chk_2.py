@@ -1,62 +1,7 @@
 import sys
 from sympy import *
-from boolector import Boolector
 import time
-import parser
-import hf
-import copy
 
-btor = Boolector();
-btor.Set_opt("model_gen", 1)
-btor.Set_opt("incremental", 1)
-
-def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
-	function =  function.replace('-','+ -')
-	function = function.split('+')
-	function[:] = [x.strip() for x in function if x != '']
-	b_func = 0 #Btor poly initialised to 0
-	
-	for mon in function: #Loop runs for all the monomials in the current function
-		if mon[0] == '-': #If the monomial is negative
-			minus = 1
-			mon = list(mon)
-			del mon[0]
-			mon = ''.join(mon)
-		else:
-			minus = 0
-		
-		tmp = 1
-		mon = mon.split('**')
-		if len(mon) == 1: #No exponentiated variables
-			mon = mon[0].split('*')
-			for t in mon:
-				if hf.isint(t):
-					tmp = tmp * int(t.strip())
-				else:
-					tmp = tmp * b_var[var_dir[t.strip()]]
-		else: #Exponentiated variables
-			p_mon_1 = mon[0].split('*')
-			p_mon_2 = mon[1].split('*')
-			for j in range(int(p_mon_2[0].strip())-1):
-				tmp = tmp * b_var[var_dir[p_mon_1[-1].strip()]]
-
-			for t in p_mon_1:
-				if hf.isint(t):
-					tmp = tmp * int(t.strip())
-				else:
-					tmp = tmp * b_var[var_dir[t.strip()]]
-			k = 0		
-			for t in p_mon_2:
-				if k != 0:
-					if hf.isint(t):
-						tmp = tmp * int(t.strip())
-					else:
-						tmp = tmp * b_var[var_dir[t.strip()]]
-				k = 1
-		if minus: #Complements the monomial
-			tmp = - tmp
-		b_func = b_func + tmp
-	return b_func
 
 ############################################################################
 ###################### PARSING THE .POLY INPUT FILE ########################
