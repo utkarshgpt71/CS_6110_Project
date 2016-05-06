@@ -2,20 +2,35 @@ import sys
 from sympy import *
 from boolector import Boolector
 import time
-import parser
-import hf
 import copy
 
 btor = Boolector();
 btor.Set_opt("model_gen", 1)
 btor.Set_opt("incremental", 1)
 
-def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
+def isint(v):
+	try:
+		int(v)
+	except:
+		return 0
+
+	return 1
+
+def print_sol(var,sol):
+	for k in range(len(sol)):
+		print '\nSolutions Mod %d' %(2**(k+1))
+		print var
+		for j in range(len(sol[k])):
+			print sol[k][j]
+		print 'Total Solutions Mod %d = %d' %(2**(k+1),len(sol[k]) )
+	print '\n'
+
+def sym2btor(function, var_dir, b_func, b_var, tmp, cm):
 	
 	function =  function.replace('-','+ -')
 	function = function.split('+')
 	function[:] = [x.strip() for x in function if x != '']
-	b_func = btor.Const(0,bw+1) #Btor poly initialised to 0
+	b_func = btor.Const(0,cm+1) #Btor poly initialised to 0
 	
 	for mon in function: #Loop runs for all the monomials in the current function
 		if mon[0] == '-': #If the monomial is negative
@@ -31,7 +46,7 @@ def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
 		if len(mon) == 1: #No exponentiated variables
 			mon = mon[0].split('*')
 			for t in mon:
-				if hf.isint(t):
+				if isint(t):
 					tmp = tmp * int(t.strip())
 				else:
 					tmp = tmp * b_var[var_dir[t.strip()]]
@@ -42,14 +57,14 @@ def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
 				tmp = tmp * b_var[var_dir[p_mon_1[-1].strip()]]
 
 			for t in p_mon_1:
-				if hf.isint(t):
+				if isint(t):
 					tmp = tmp * int(t.strip())
 				else:
 					tmp = tmp * b_var[var_dir[t.strip()]]
 			k = 0		
 			for t in p_mon_2:
 				if k != 0:
-					if hf.isint(t):
+					if isint(t):
 						tmp = tmp * int(t.strip())
 					else:
 						tmp = tmp * b_var[var_dir[t.strip()]]
@@ -95,10 +110,10 @@ sym_v = []
 for i in range(len(var)):
 	sym_v.append(symbols(var[i]))
 
-bw = max(mod)
+cm = max(mod)
 
 for i in range(len(func)):
-	func[i] = func[i]*(2**(bw-mod[i]))
+	func[i] = func[i]*(2**(cm-mod[i]))
 
 ############################################################################
 ############################# Boolector Part ###############################
@@ -106,7 +121,7 @@ for i in range(len(func)):
 
 #####################################
 def lift(l_ast, prev_sol, m, J_eval):
-	global bw
+	global cm
 	global var_bw
 	global func_m
 	global sym_t_m
@@ -117,7 +132,7 @@ def lift(l_ast, prev_sol, m, J_eval):
 	global tmp
 	global sol
 
-	if m > bw:
+	if m > cm:
 		return
 
 	func_m_eval = func_m
@@ -127,18 +142,15 @@ def lift(l_ast, prev_sol, m, J_eval):
 	eqn_m = func_m_eval + J_eval*sym_t_m*(2**(m-1))
 	eqn = list(eqn_m)
 
-	#print eqn
 	for i in range(len(eqn)):
-		#print eqn[i]
-		#print type(eqn[i])
-		if hf.isint(eqn[i]):
+		if isint(eqn[i]):
 			eqn[i] = int(eqn[i]) % 2**m
 		else:
 			eqn[i] = trunc(eqn[i],2**m)
 
 	for i in range(len(eqn)):
 		function = str(eqn[i])
-		b_eqn[i] = sym2btor(function, tvar_dir, b_eqn[i], b_tvar, tmp, bw)
+		b_eqn[i] = sym2btor(function, tvar_dir, b_eqn[i], b_tvar, tmp, cm)
 
 	for i in range(len(b_eqn)):
 		btor.Assume(b_eqn[i] % (2**m) == 0)	
@@ -169,18 +181,15 @@ def lift(l_ast, prev_sol, m, J_eval):
 			break
 	if v == 1:
 		sol[m-1].append(var_sol)
+		if m == cm:
+			print '\nCirciuts are not equivalent for the following solution set:\n'
+			print var
+			print sol[m-1][0]
+			print '\nSolution space explored so far'
+			print_sol(var,sol)
+			exit()
 	########################################################
 	
-	# sol[m-1].append(var_sol)
-	# print 'In Lift', 
-	# print m
-	# print prev_sol
-	# print eqn
-	# print curr_sol
-	# print sol
-	# print '\n'
-	
-
 	l_ast_tmp = []
 	for i in range(len(b_tvar)):
 		l_ast_tmp.append([])
@@ -238,10 +247,13 @@ def solve(ast):
 		curr_sol.append(j)
 
 	sol[0].append(curr_sol)
-	# print 'In Solve'
-	# print curr_sol
-	# print sol
-	# print '\n'
+	if cm == 1:
+		print '\nCirciuts are not equivalent for the following solution set:\n'
+		print var
+		print sol[m-1][0]
+		print '\nSolution space explored so far:'
+		print_sol(var,sol)
+		exit()
 
 	J_eval = J
 	for i in range(len(sym_v)):
@@ -258,7 +270,6 @@ def solve(ast):
 		if i == 0:
 			if curr_sol[i] not in ast_ts[i]:
 				ast_ts[i].append(curr_sol[i])
-			#print ast_ts
 			solve(ast_ts)
 		else:
 			if curr_sol[i] not in ast_ts[i]:
@@ -266,7 +277,6 @@ def solve(ast):
 			for j in range(i):
 				if (1-curr_sol[j]) not in ast_ts[j]:
 					ast_ts[j].append( (1-curr_sol[j]) )
-			#print ast_ts
 			solve(ast_ts)
 
 #####################################
@@ -274,19 +284,18 @@ def solve(ast):
 b_var = []
 var_dir = {}
 for i in range(len(var)):
-	b_var.append(btor.Var(bw+1 , var[i]))
+	b_var.append(btor.Var(cm+1 , var[i]))
 	var_dir[var[i]] = i
 
-#print var_dir	
 ####### Generating func in Boolector ########
 
 b_func = []
-tmp = btor.Var(bw+1 , 'tmp')
+tmp = btor.Var(cm+1 , 'tmp')
 
 for i in range(len(func)): #Loop runs for all the polynomials
-	b_func.append( btor.Var(bw+1 , 'f'+str(i+1)) )
+	b_func.append( btor.Var(cm+1 , 'f'+str(i+1)) )
 	function = str(func[i])
-	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp, bw)
+	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp, cm)
 	
 #############################################
 
@@ -298,11 +307,9 @@ for i in range(len(b_func)):
 	btor.Assume(b_func[i] % 2 == 0)
 
 sol = []
-for i in range(bw):
+for i in range(cm):
 	sol.append([])	
 	
-#print sol
-#exit()
 result = btor.Sat()
 
 ast = []
@@ -350,24 +357,20 @@ sym_t_m = Matrix(sym_t)
 b_tvar = []
 tvar_dir = {}
 for i in range(len(sym_t)):
-	b_tvar.append(btor.Var(bw+1 , 'it' + str(i+1)))
+	b_tvar.append(btor.Var(cm+1 , 'it' + str(i+1)))
 	btor.Assert(b_tvar[i] < 2)
 	tvar_dir['it' + str(i+1)] = i
 
 b_eqn = []
 for i in range(len(func)): #No. of equations = No. of functions
-	b_eqn.append( btor.Var(bw+1 , 'eqn'+str(i+1)) )
+	b_eqn.append( btor.Var(cm+1 , 'eqn'+str(i+1)) )
 
 solve(ast)
-#print 'Solutions'
-#print sol
-hf.print_sol(var,sol)
-#print var
-#print sol
+print 'Circuits are equivalent\n'
+print 'Solution space explored:'
+print_sol(var,sol)
 
 #############################################
-
-
 
 ############################################################################
 ############################################################################
