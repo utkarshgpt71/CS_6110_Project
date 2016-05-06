@@ -10,7 +10,7 @@ btor = Boolector();
 btor.Set_opt("model_gen", 1)
 btor.Set_opt("incremental", 1)
 
-def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
+def sym2btor(function, var_dir, b_func, b_var, tmp):
 	function =  function.replace('-','+ -')
 	function = function.split('+')
 	function[:] = [x.strip() for x in function if x != '']
@@ -91,10 +91,10 @@ f.close()
 ############################################################################
 #print var_bw
 #print func
-sym = []
+sym_v = []
 
 for i in range(len(var)):
-	sym.append(symbols(var[i]))
+	sym_v.append(symbols(var[i]))
 #func_m = Matrix(func)
 
 bw = max(mod)
@@ -103,9 +103,6 @@ for i in range(len(func)):
 	func[i] = func[i]*(2**(bw-mod[i]))
 #print func
 #print sym
-func_m = Matrix(func)
-J = func_m.jacobian(sym)
-
 # def lift(sol, bw, func, J, var, ):
 
 
@@ -167,7 +164,6 @@ b_var = []
 var_dir = {}
 for i in range(len(var)):
 	b_var.append(btor.Var(bw+1 , var[i]))
-	#btor.Assert(b_var[i] < 2**var_bw[i])
 	var_dir[var[i]] = i
 
 #print var_dir	
@@ -177,13 +173,13 @@ b_func = []
 tmp = btor.Var(bw+1 , 'tmp')
 
 for i in range(len(func)): #Loop runs for all the polynomials
-	b_func.append( btor.Var(bw+1 , 'f'+str(i)) )
+	b_func.append( btor.Var(bw+1 , 'f'+str(i+1)) )
 	function = str(func[i])
-	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp, bw)
+	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp)
 	
 #############################################
 
-############### Solving Mod 2################
+######## Trying solving Mod 2 ###############
 for i in range(len(var)):
 	btor.Assume(b_var[i] < 2)
 
@@ -198,86 +194,64 @@ result = btor.Sat()
 
 ast = []
 for i in range(len(var)):
-#	sol_2[i].append(int (b_var[i].assignment,2) )
 	ast.append([])
 
-if result != 10:
+if result != 10: #If no solution exists modulo 2
 	print 'No solution mod 2'
 	print 'The circuits are equivalent'
 	exit()
 
-#print var
+####### Assertions for Non-invertible J ########
+if len(func) != len(var):
+	je = 0
+else:
+	try:
+		d = int(trunc(J.det(),2))
+		if d == 0:
+			je = 0
+	except:
+		je = 1
+
+try:
+	assert(je == 0)
+except:
+	print "The implementation only supports Case 2 of Hensel's Lemma for now"
+	exit()
+################################################
+
+func_m = Matrix(func)
+J = func_m.jacobian(sym_v)
+
+sym_t = []
+
+for i in range(len(var)):
+	sym_t.append(symbols('it' + str(i+1)))
+sym_t_m = Matrix(sym_t)
+
+print sym_t_m
+
+eqn_m = func_m + J*sym_t_m
+eqn = list(eqn_m)
+
+b_tvar = []
+tvar_dir = {}
+for i in range(len(sym_t)):
+	b_tvar.append(btor.Var(bw+1 , 'it' + str(i+1)))
+	tvar_dir['it' + str(i+1)] = i
+
+b_eqn = []
+for i in range(len(eqn)): #Loop runs for all the polynomials
+	b_eqn.append( btor.Var(bw+1 , 'eqn'+str(i+1)) )
+
 solve(ast)
 print 'All solutions mod 2'
 hf.print_sol(var,sol_2)
 #print var
 #print sol_2
 
-
-# no_sol = 1
-# while result == 10:
-# 	no_sol = 0;
-# 	for i in range(len(var)):
-# 		print '%s = %d' %(var[i], int (b_var[i].assignment,2) ),
-# 		sol_2[i].append(int (b_var[i].assignment,2))
-
-# 	for i in range(len(b_func)):
-# 		btor.Assume(b_func[i] % 2 == 0)
-
-# 	for i in range(len(sol_2)):
-# 		for j in range(len(sol_2[i])):
-# 			btor.Assume(b_var[i] != sol_2[i][j])
-# 	result = btor.Sat()
-# 	print '\n'
-# else:
-# 	if no_sol:
-# 		print 'No solution mod 2'
-# 		print 'Circuits are equivalent'
-# 	else:
-# 		print 'All solution mod 2 found'
-# 		#print sol_2
-
 #############################################
 
-##### Initializing the lifting equation #####
-#print J
-# try:
-# 	J_inv = trunc(J,2)**-1
-# 	je = 1
-# except:
-# 	je = 0
 
-# if len(func) != len(var):
-# 	je = 0
-# else:
-# 	try:
-# 		d = int(trunc(J.det(),2))
-# 		if d == 0:
-# 			je = 0
-# 	except
-# print sol_2
-# sol = sol_2
-
-# T = []
-# b_T = []
-# T_dir = {}
-# for i in range(len(var)):
-# 	T.append(symbols('it' + str(i))) 
-# 	b_T.append(btor.Var(bw+1 , 'it'+str(i)))
-# 	T_dir['it'+str(i)] = i
-
-# #print T
-# T_m = Matrix(T)
-# #print T_m
-# #print func_m 
-# eqn_sym = func_m + J*T_m
-# print J.det()
-# print eqn_sym
-# eqn_sym = 
-# if je == 0:
-# 	for i in range(len(sol[0][0])):
-# 		eqn_sym = 
-#############################################
 
 ############################################################################
 ############################################################################
