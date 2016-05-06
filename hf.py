@@ -9,17 +9,15 @@ import hf
 def isint(v):
 	try:
 		int(v)
-	except ValueError:
+	except:
 		return 0
 
 	return 1
 
 def print_sol(var,sol):
-	print var
-	for j in range(len(sol[0])):
-		print '[',
-		for i in range(len(sol)):
-			print '%d,' %sol[i][j],
-		print ']'
-
-	print 'Total Solutions = %d' %len(sol[0])
+	for k in range(len(sol)):
+		print '\nSolutions Mod %d' %(2**(k+1))
+		print var
+		for j in range(len(sol[k])):
+			print sol[k][j]
+		print 'Total Solutions Mod %d = %d' %(2**(k+1),len(sol[k]) )

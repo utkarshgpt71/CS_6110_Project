@@ -10,11 +10,12 @@ btor = Boolector();
 btor.Set_opt("model_gen", 1)
 btor.Set_opt("incremental", 1)
 
-def sym2btor(function, var_dir, b_func, b_var, tmp):
+def sym2btor(function, var_dir, b_func, b_var, tmp, bw):
+	
 	function =  function.replace('-','+ -')
 	function = function.split('+')
 	function[:] = [x.strip() for x in function if x != '']
-	b_func = 0 #Btor poly initialised to 0
+	b_func = btor.Const(0,bw+1) #Btor poly initialised to 0
 	
 	for mon in function: #Loop runs for all the monomials in the current function
 		if mon[0] == '-': #If the monomial is negative
@@ -89,36 +90,122 @@ f.close()
 ############################################################################
 ############################################################################
 ############################################################################
-#print var_bw
-#print func
 sym_v = []
 
 for i in range(len(var)):
 	sym_v.append(symbols(var[i]))
-#func_m = Matrix(func)
 
 bw = max(mod)
 
 for i in range(len(func)):
 	func[i] = func[i]*(2**(bw-mod[i]))
-#print func
-#print sym
-# def lift(sol, bw, func, J, var, ):
-
 
 ############################################################################
 ############################# Boolector Part ###############################
 ############################################################################
 
 #####################################
+def lift(l_ast, prev_sol, m, J_eval):
+	global bw
+	global var_bw
+	global func_m
+	global sym_t_m
+	global b_eqn
+	global sym_v
+	global tvar_dir
+	global b_tvar
+	global tmp
+	global sol
+
+	if m > bw:
+		return
+
+	func_m_eval = func_m
+	for i in range(len(prev_sol)):
+		func_m_eval = func_m_eval.subs(sym_v[i],prev_sol[i])
+
+	eqn_m = func_m_eval + J_eval*sym_t_m*(2**(m-1))
+	eqn = list(eqn_m)
+
+	for i in range(len(eqn)):
+		#print eqn[i]
+		#print type(eqn[i])
+		if hf.isint(eqn[i]):
+			eqn[i] = int(eqn[i]) % 2**m
+		else:
+			eqn[i] = trunc(eqn[i],2**m)
+
+	for i in range(len(eqn)):
+		function = str(eqn[i])
+		b_eqn[i] = sym2btor(function, tvar_dir, b_eqn[i], b_tvar, tmp, bw)
+
+	for i in range(len(b_eqn)):
+		btor.Assume(b_eqn[i] % (2**m) == 0)	
+
+	for i in range(len(l_ast)):
+		for j in range(len(l_ast[i])):
+			btor.Assume(b_tvar[i] != l_ast[i][j])
+
+	result = btor.Sat()
+
+	if result != 10:
+		return
+
+	curr_sol = []
+	for i in range(len(b_tvar)):
+		j = int (b_tvar[i].assignment,2) 
+		curr_sol.append(j)
+
+	var_sol = []
+	for i in range(len(b_tvar)):
+		var_sol.append( prev_sol[i] + curr_sol[i]*(2**(m-1)) )
+
+	#### Checking if current solution is actually valid ####	
+	v = 1
+	for i in range(len(var_sol)):
+		if(var_sol[i] >= 2**var_bw[i]):
+			v = 0
+			break
+	if v == 0:
+		return
+	########################################################
+	
+	sol[m-1].append(var_sol)	
+
+	l_ast_tmp = []
+	for i in range(len(b_tvar)):
+		l_ast_tmp.append([])
+
+	lift(l_ast_tmp, var_sol, m+1, J_eval)
+
+	for i in range(len(curr_sol)):
+		l_ast_ts = copy.deepcopy(l_ast)
+		if i == 0:
+			if curr_sol[i] not in l_ast_ts[i]:
+				l_ast_ts[i].append(curr_sol[i])
+			#print ast_ts
+			lift(l_ast_ts, prev_sol, m, J_eval)
+		else:
+			if curr_sol[i] not in l_ast_ts[i]:
+				l_ast_ts[i].append(curr_sol[i])
+			for j in range(i):
+				if (1-curr_sol[j]) not in l_ast_ts[j]:
+					l_ast_ts[j].append( (1-curr_sol[j]) )
+			#print ast_ts
+			lift(l_ast_ts, prev_sol, m, J_eval)	
+
+#####################################
+
+#####################################
 def solve(ast):
 	global var
 	global b_func
 	global b_var
-	global sol_2
+	global sol
 	global btor
-
-	#print ast
+	global J
+	global sym_v
+	global b_tvar
 
 	for i in range(len(b_func)):
 		btor.Assume(b_func[i] % 2 == 0)
@@ -139,8 +226,19 @@ def solve(ast):
 
 	for i in range(len(var)):
 		j = int (b_var[i].assignment,2) 
-		sol_2[i].append(j)
 		curr_sol.append(j)
+
+	sol[0].append(curr_sol)
+
+	J_eval = J
+	for i in range(len(sym_v)):
+		J_eval = J_eval.subs(sym_v[i],curr_sol[i])
+
+	l_ast = []
+	for i in range(len(b_tvar)):
+		l_ast.append([])	
+
+	lift(l_ast, curr_sol, 2, J_eval)
 
 	for i in range(len(curr_sol)):
 		ast_ts = copy.deepcopy(ast)
@@ -175,7 +273,7 @@ tmp = btor.Var(bw+1 , 'tmp')
 for i in range(len(func)): #Loop runs for all the polynomials
 	b_func.append( btor.Var(bw+1 , 'f'+str(i+1)) )
 	function = str(func[i])
-	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp)
+	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp, bw)
 	
 #############################################
 
@@ -186,10 +284,12 @@ for i in range(len(var)):
 for i in range(len(b_func)):
 	btor.Assume(b_func[i] % 2 == 0)
 
-sol_2 = []	
-for i in range(len(var)):
-	sol_2.append([])
-
+sol = []
+for i in range(bw):
+	sol.append([])	
+	
+#print sol
+#exit()
 result = btor.Sat()
 
 ast = []
@@ -202,6 +302,15 @@ if result != 10: #If no solution exists modulo 2
 	exit()
 
 ####### Assertions for Non-invertible J ########
+func_m = Matrix(func)
+func_2 = []
+
+for i in range(len(func)):
+	func_2.append(trunc(func[i],2))
+func_mj = Matrix(func_2)
+
+J = func_mj.jacobian(sym_v)
+
 if len(func) != len(var):
 	je = 0
 else:
@@ -219,35 +328,29 @@ except:
 	exit()
 ################################################
 
-func_m = Matrix(func)
-J = func_m.jacobian(sym_v)
-
 sym_t = []
 
 for i in range(len(var)):
 	sym_t.append(symbols('it' + str(i+1)))
 sym_t_m = Matrix(sym_t)
 
-print sym_t_m
-
-eqn_m = func_m + J*sym_t_m
-eqn = list(eqn_m)
-
 b_tvar = []
 tvar_dir = {}
 for i in range(len(sym_t)):
 	b_tvar.append(btor.Var(bw+1 , 'it' + str(i+1)))
+	btor.Assert(b_tvar[i] < 2)
 	tvar_dir['it' + str(i+1)] = i
 
 b_eqn = []
-for i in range(len(eqn)): #Loop runs for all the polynomials
+for i in range(len(func)): #No. of equations = No. of functions
 	b_eqn.append( btor.Var(bw+1 , 'eqn'+str(i+1)) )
 
 solve(ast)
-print 'All solutions mod 2'
-hf.print_sol(var,sol_2)
+#print 'Solutions'
+#print sol
+hf.print_sol(var,sol)
 #print var
-#print sol_2
+#print sol
 
 #############################################
 
