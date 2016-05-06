@@ -127,6 +127,7 @@ def lift(l_ast, prev_sol, m, J_eval):
 	eqn_m = func_m_eval + J_eval*sym_t_m*(2**(m-1))
 	eqn = list(eqn_m)
 
+	#print eqn
 	for i in range(len(eqn)):
 		#print eqn[i]
 		#print type(eqn[i])
@@ -166,11 +167,19 @@ def lift(l_ast, prev_sol, m, J_eval):
 		if(var_sol[i] >= 2**var_bw[i]):
 			v = 0
 			break
-	if v == 0:
-		return
+	if v == 1:
+		sol[m-1].append(var_sol)
 	########################################################
 	
-	sol[m-1].append(var_sol)	
+	# sol[m-1].append(var_sol)
+	# print 'In Lift', 
+	# print m
+	# print prev_sol
+	# print eqn
+	# print curr_sol
+	# print sol
+	# print '\n'
+	
 
 	l_ast_tmp = []
 	for i in range(len(b_tvar)):
@@ -229,6 +238,10 @@ def solve(ast):
 		curr_sol.append(j)
 
 	sol[0].append(curr_sol)
+	# print 'In Solve'
+	# print curr_sol
+	# print sol
+	# print '\n'
 
 	J_eval = J
 	for i in range(len(sym_v)):
