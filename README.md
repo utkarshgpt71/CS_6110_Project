@@ -20,7 +20,7 @@ Please follow the following steps for installing the Boolector Python API:
 
 	5. run "./configure -fPIC" and then "make"
 
-	6. change directory to boolector from the previous directory i.e. "cd ../boolector"
+	6. change directory to boolector from the previous directory (i.e. "cd ../boolector")
 
 	7. run "./configure -python && make" .  If you get the error No module named Cython.Distutils, perform the following steps to install Cython. Otherwise proceed to step 8.
 		7.1 Download the Cython package from http://cython.org/#download

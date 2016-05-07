@@ -25,6 +25,47 @@ def print_sol(var,sol):
 		print 'Total Solutions Mod %d = %d' %(2**(k+1),len(sol[k]) )
 	print '\n'
 
+def isinvertible(J_eval):
+	global func
+	global var
+
+	if len(func) != len(var):
+		return 0
+	else:
+		if isint(J_eval.det()):
+			d = int(J_eval.det())%2
+		else:
+			d = int(trunc(J_eval.det(),2))
+
+		if d == 0:
+			return 0
+		else:
+			return 1
+
+def invert_mod2(J_eval):
+	global func
+	global var
+
+	J_inv = J_eval**-1
+	J_inv = J_inv * J_eval.det()
+	J_elm = list(J_inv)
+
+	for i in range(len(func)): #Making sure that the inverse is reduced modulo 2
+		J_row = []
+		for j in range(len(var)):
+			if isint(J_elm[ i*len(var) + j ]):
+				J_elm[i*len(var) + j] = int(J_elm[i*len(var) + j]) % 2
+			else:
+				J_elm[i*len(var) + j] = trunc(J_elm[i*len(var) + j],2)
+			J_row.append(J_elm[i*len(var) + j])
+		if i == 0:
+			J_inv = Matrix([J_row])
+		else:
+			J_inv = J_inv.row_insert(i, Matrix([J_row]))
+	
+	return J_inv
+
+
 def sym2btor(function, var_dir, b_func, b_var, tmp, cm):
 	
 	function =  function.replace('-','+ -')
@@ -102,9 +143,7 @@ for line in f.readlines():
 			func.append( expand(sympify(line[0])) )
 
 f.close()
-############################################################################
-############################################################################
-############################################################################
+
 sym_v = []
 
 for i in range(len(var)):
@@ -116,11 +155,15 @@ for i in range(len(func)):
 	func[i] = func[i]*(2**(cm-mod[i]))
 
 ############################################################################
+############################################################################
+############################################################################	
+
+############################################################################
 ############################# Boolector Part ###############################
 ############################################################################
 
 #####################################
-def lift(l_ast, prev_sol, m, J_eval):
+def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 	global cm
 	global var_bw
 	global func_m
@@ -132,12 +175,45 @@ def lift(l_ast, prev_sol, m, J_eval):
 	global tmp
 	global sol
 
-	if m > cm:
+	if m > cm: #Check if the lifting is being performed beyond the composite moduli
 		return
 
 	func_m_eval = func_m
-	for i in range(len(prev_sol)):
+	for i in range(len(prev_sol)): #Evaluating the function vector at the prev sol
 		func_m_eval = func_m_eval.subs(sym_v[i],prev_sol[i])
+
+	##################### If the J inverse exists ###########################
+	if inv == 1: 
+		print 'Inverse Exists'
+		for i in range(len(func_m_eval)):
+			func_m_eval[i] = func_m_eval[i]/(2**(m-1))
+		T = -J_inv*(func_m_eval)
+		curr_sol = list(T)
+		curr_sol[:] = [int(c)%2 for c in curr_sol]
+		var_sol = []
+		for i in range(len(curr_sol)):
+			var_sol.append( prev_sol[i] + curr_sol[i]*(2**(m-1)) )
+
+		v = 1
+		for i in range(len(var_sol)):
+			if(var_sol[i] >= 2**var_bw[i]):
+				v = 0
+				break
+		if v == 1: #Adding only valid solutions and trying to lift them
+			sol[m-1].append(var_sol)
+			if m == cm:
+				print '\nCirciuts are not equivalent for the following solution set:\n'
+				print var
+				print sol[m-1][0]
+				print '\nSolution space explored so far'
+				print_sol(var,sol)
+				exit()
+			l_ast_tmp = []
+			for i in range(len(b_tvar)):
+				l_ast_tmp.append([])
+
+			lift(l_ast_tmp, var_sol, m+1, J_eval, J_inv, 1)
+	#########################################################################
 
 	eqn_m = func_m_eval + J_eval*sym_t_m*(2**(m-1))
 	eqn = list(eqn_m)
@@ -190,19 +266,21 @@ def lift(l_ast, prev_sol, m, J_eval):
 			exit()
 	########################################################
 	
-	l_ast_tmp = []
-	for i in range(len(b_tvar)):
-		l_ast_tmp.append([])
+	if v == 1: #Try lifting the solution only if it is valid
+		l_ast_tmp = []
+		for i in range(len(b_tvar)):
+			l_ast_tmp.append([])
 
-	lift(l_ast_tmp, var_sol, m+1, J_eval)
+		lift(l_ast_tmp, var_sol, m+1, J_eval, [], 0)
 
+	#If the current solution is not valid try finding other solutions
 	for i in range(len(curr_sol)):
 		l_ast_ts = copy.deepcopy(l_ast)
 		if i == 0:
 			if curr_sol[i] not in l_ast_ts[i]:
 				l_ast_ts[i].append(curr_sol[i])
 			#print ast_ts
-			lift(l_ast_ts, prev_sol, m, J_eval)
+			lift(l_ast_ts, prev_sol, m, J_eval, [], 0)
 		else:
 			if curr_sol[i] not in l_ast_ts[i]:
 				l_ast_ts[i].append(curr_sol[i])
@@ -210,7 +288,7 @@ def lift(l_ast, prev_sol, m, J_eval):
 				if (1-curr_sol[j]) not in l_ast_ts[j]:
 					l_ast_ts[j].append( (1-curr_sol[j]) )
 			#print ast_ts
-			lift(l_ast_ts, prev_sol, m, J_eval)	
+			lift(l_ast_ts, prev_sol, m, J_eval, [], 0)	
 
 #####################################
 
@@ -263,7 +341,11 @@ def solve(ast):
 	for i in range(len(b_tvar)):
 		l_ast.append([])	
 
-	lift(l_ast, curr_sol, 2, J_eval)
+	if isinvertible(J_eval):
+		J_inv = invert_mod2(J_eval)
+		lift(l_ast, curr_sol, 2, J_eval, J_inv, 1)
+	else:
+		lift(l_ast, curr_sol, 2, J_eval, [], 0)
 
 	for i in range(len(curr_sol)):
 		ast_ts = copy.deepcopy(ast)
@@ -323,29 +405,23 @@ if result != 10: #If no solution exists modulo 2
 
 ####### Assertions for Non-invertible J ########
 func_m = Matrix(func)
-func_2 = []
+
+J = func_m.jacobian(sym_v)
+J_elm = list(J)
 
 for i in range(len(func)):
-	func_2.append(trunc(func[i],2))
-func_mj = Matrix(func_2)
-
-J = func_mj.jacobian(sym_v)
-
-if len(func) != len(var):
-	je = 0
-else:
-	try:
-		d = int(trunc(J.det(),2))
-		if d == 0:
-			je = 0
-	except:
-		je = 1
-
-try:
-	assert(je == 0)
-except:
-	print "The implementation only supports Case 2 of Hensel's Lemma for now"
-	exit()
+	J_row = []
+	for j in range(len(var)):
+		if isint(J_elm[ i*len(var) + j ]):
+			J_elm[i*len(var) + j] = int(J_elm[i*len(var) + j]) % 2
+		else:
+			J_elm[i*len(var) + j] = trunc(J_elm[i*len(var) + j],2)
+		J_row.append(J_elm[i*len(var) + j])
+	if i == 0:
+		J = Matrix([J_row])
+	else:
+		J = J.row_insert(i, Matrix([J_row]))
+	
 ################################################
 
 sym_t = []
@@ -366,7 +442,7 @@ for i in range(len(func)): #No. of equations = No. of functions
 	b_eqn.append( btor.Var(cm+1 , 'eqn'+str(i+1)) )
 
 solve(ast)
-print 'Circuits are equivalent\n'
+print '\nCircuits are equivalent\n'
 print 'Solution space explored:'
 print_sol(var,sol)
 
