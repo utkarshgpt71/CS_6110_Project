@@ -127,7 +127,7 @@ var  = []
 var_bw = []
 
 for line in f.readlines():
-	line = line.rstrip()
+	line = line.strip()
 	line = line.split(';')
 	if len(line) == 1:
 		if len(line[0]) > 5:
@@ -375,7 +375,7 @@ b_func = []
 tmp = btor.Var(cm+1 , 'tmp')
 
 for i in range(len(func)): #Loop runs for all the polynomials
-	b_func.append( btor.Var(cm+1 , 'f'+str(i+1)) )
+	b_func.append( btor.Var(cm+1 , 'func'+str(i+1)) )
 	function = str(func[i])
 	b_func[i] = sym2btor(function, var_dir, b_func[i], b_var, tmp, cm)
 	
@@ -403,7 +403,7 @@ if result != 10: #If no solution exists modulo 2
 	print 'The circuits are equivalent'
 	exit()
 
-####### Assertions for Non-invertible J ########
+#################### Setting up J #############
 func_m = Matrix(func)
 
 J = func_m.jacobian(sym_v)
@@ -427,15 +427,15 @@ for i in range(len(func)):
 sym_t = []
 
 for i in range(len(var)):
-	sym_t.append(symbols('it' + str(i+1)))
+	sym_t.append(symbols('var_t' + str(i+1)))
 sym_t_m = Matrix(sym_t)
 
 b_tvar = []
 tvar_dir = {}
 for i in range(len(sym_t)):
-	b_tvar.append(btor.Var(cm+1 , 'it' + str(i+1)))
+	b_tvar.append(btor.Var(cm+1 , 'var_t' + str(i+1)))
 	btor.Assert(b_tvar[i] < 2)
-	tvar_dir['it' + str(i+1)] = i
+	tvar_dir['var_t' + str(i+1)] = i
 
 b_eqn = []
 for i in range(len(func)): #No. of equations = No. of functions
