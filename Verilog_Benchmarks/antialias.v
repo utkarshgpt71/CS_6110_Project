@@ -10,7 +10,7 @@ module foo();
 	wire [10:0] c;
 	wire [15:0] f;
 	wire [15:0] g;
-
+	
 	assign f=156*c*c*c*c*c*c+62724*c*c*c*c*c+17968*c*c*c*c+18661*c*c*c+43593*c*c+40224*c+13281;
 	assign g=156*c*c*c*c*c*c+5380*c*c*c*c*c+1584*c*c*c*c+10469*c*c*c+27209*c*c+7456*c+13281;
 	oldmiter(f,g);
