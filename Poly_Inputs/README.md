@@ -6,7 +6,7 @@ x[1:0]
 
 After writing down all the variables, specify the equations and their moduli. For example, if there is a equation in x and y with a modulus 3, you can specify as
 
-x\**2 + 3\*y ; 3
+x&ast&ast2 + 3&asty ; 3
 
 Use semicolon to separate the actaul equation and its modulus. ** is the symbol for exponent. Also the equation will be treated equivalent to 0 mod 3. So transform all your equations accordingly before writing them down in this file.
 
