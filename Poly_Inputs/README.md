@@ -8,6 +8,6 @@ After writing down all the variables, specify the equations and their moduli. Fo
 
 x&ast;&ast;2 + 3&ast;y ; 3
 
-Use semicolon to separate the actaul equation and its modulus. ** is the symbol for exponent. Also the equation will be treated equivalent to 0 mod 3. So transform all your equations accordingly before writing them down in this file.
+Use semicolon to separate the actaul equation and its modulus. &ast;&ast; is the symbol for exponent. Also the equation will be treated equivalent to 0 mod 3. So transform all your equations accordingly before writing them down in this file.
 
 View one of the .poly files in this directory to understand the format better.
