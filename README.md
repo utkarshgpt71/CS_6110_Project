@@ -49,7 +49,7 @@ Following is a brief description of Files and Directories in this Repository:
 
 	python poly_solver.py Poly_Inputs/<filename>.poly
 
-	5. ver2poly: Converts the .v files in Verilog_Benchmarks to .poly format and writes them in a directory Inter_Poly_Inputs. This script has a very limited support for the types of operators mentioned in the .v files. Can be executes as follows:
+	5. ver2poly: Converts the .v files in Verilog_Benchmarks to .poly format and writes them in a directory Inter_Poly_Inputs. This script has a very limited support for the types of operators mentioned in the .v files. Can be executed as follows:
 
 	python ver2poly.py Verilog_Benchmarks/<filename>.v
 
