@@ -1,26 +1,33 @@
 module poly4X3 ();
 
 input [15:0] x,y;
+output [15:0] f1;
+output [15:0] g1;
 
-wire [15:0] a = x + y;
+wire [15:0] a;
 //wire [15:0] b = x - y;
-wire [15:0] c = x*y;
-wire [15:0] d = x*x + y*y;
+wire [15:0] c;
+wire [15:0] d;
 //wire [15:0] e = x + 3*y;
 //wire [15:0] f = x - 3*y;
 //wire [15:0] g = 3*x + y;
 //wire [15:0] h = 3*x - y;
 //wire [15:0] i = a*b;
-wire [15:0] j = c*a;
+wire [15:0] j ;
 //wire [15:0] k = c*b; 
 //wire [15:0] m = c*e;
 //wire [15:0] n = c*f;
 //wire [15:0] p = c*g;
 //wire [15:0] q = c*h;
-wire [15:0] r = 30*c;
+wire [15:0] r;
 
-output [15:0] f1 = -42*x*x*x -42*y*y*y -75*x*x*y -75*x*y*y + 63*x*x +63*y*y + 90*x*y+104*x +104*y -94;  
-output [15:0] g1 = -42*(x*x*x + y*y*y) - 75*(j) + 63*(d) + 3*r + 104*(a) -94;  
+assign a = x + y; 
+assign c = x*y;
+assign d = x*x + y*y;
+assign j = c*a;
+assign r = 30*c;
+assign f1 = -42*x*x*x -42*y*y*y -75*x*x*y -75*x*y*y + 63*x*x +63*y*y + 90*x*y+104*x +104*y -94;  
+assign g1 = -42*(x*x*x + y*y*y) - 75*(j) + 63*(d) + 3*r + 104*(a) -94;  
 oldmiter(f1,g1);
 
 //output [15:0] f2 = 125*x*x*x -42*y*y*y +75*x*x*y -25*x*y*y - 63*x*x +63*y*y + 30*x*y-250*x -84*y -63;

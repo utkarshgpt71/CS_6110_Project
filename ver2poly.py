@@ -31,6 +31,14 @@ line_no = 1
 var_index = 0
 int_var_count = 0
 
+def isint(v):
+	try:
+		int(v)
+	except:
+		return 0
+
+	return 1
+
 def conditionals(expr):
 	global var_dir
 	global var_bw
@@ -53,31 +61,41 @@ def conditionals(expr):
 	c1 = expr1[0].strip()
 	c2 = expr1[1].strip()
 
-	try:
-			assert( var_bw[var_dir[c1]] == var_bw[var_dir[c2]] )
-	except:
-		print "Error in the comparison command"
-		print "Might be due to bit-width mismatch of input arguments"
-		f.close()
-		exit()
+	a1 = 0; a2 = 0;
+
+	if isint(c1):
+		a1 = 1
+	if isint(c2):
+		a2 = 1
+
+	if not a1 and not a2:
+		try:
+				assert( var_bw[var_dir[c1]] == var_bw[var_dir[c2]] )
+		except:
+			print "Error in the comparison command"
+			print "Might be due to bit-width mismatch of input arguments"
+			f.close()
+			exit()
 	
+
 	mod = var_bw[var_dir[c1]]
 	var.append('it%d' %int_var_count)
 	var_bw.append(2)
 	var_dir[var[-1]] = len(var)-1
 	int_var_count += 1
+	c = var[len(var)-1] 
 
 	var.append('it%d' %int_var_count)
 	var_bw.append(mod+1)
 	var_dir[var[-1]] = len(var)-1
 	int_var_count += 1
+	t1 = var[len(var)-1]
 
 	var.append('it%d' %int_var_count)
 	var_bw.append(mod)
 	var_dir[var[-1]] = len(var)-1
 	int_var_count += 1
-
-	c = var[len(var)-3] ; t1 = var[len(var)-2] ; t2 = var[len(var)-1]
+	t2 = var[len(var)-1]
 
 	if ct == 1: # less than
 		poly = '%s - (%s - %s) ; %d' %(t1,c1,c2,mod+1)
@@ -88,7 +106,7 @@ def conditionals(expr):
 	elif ct == 2: # greater than
 		poly = '%s - (%s - %s - 1) ; %d' %(t1, c1, c2, mod+1)
 		func.append(poly)
-		poly = '%s - ( %s*%s + (1-%s)*(%d - 1 - %s) ) ; %d' (t1,c,t2,c,(2**(mod+1)),t2,mod+1)
+		poly = '%s - ( %s*%s + (1-%s)*(%d - 1 - %s) ) ; %d' %(t1,c,t2,c,(2**(mod+1)),t2,mod+1)
 		func.append(poly)
 	
 	elif ct == 3: #less than or equal to
@@ -100,7 +118,7 @@ def conditionals(expr):
 	elif ct == 4:
 		poly = '%s - (%s - %s - 1) ; %d' %(t1, c1, c2, mod+1)
 		func.append(poly)
-		poly = '%s - ( (1-%s)*%s + %s*(%d - 1 - %s) ) ; %d' (t1,c,t2,c,(2**(mod+1)),t2,mod+1)
+		poly = '%s - ( (1-%s)*%s + %s*(%d - 1 - %s) ) ; %d' %(t1,c,t2,c,(2**(mod+1)),t2,mod+1)
 		func.append(poly)
 	return ( len(var) - 3 )
 

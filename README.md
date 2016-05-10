@@ -53,5 +53,10 @@ Following is a brief description of Files and Directories in this Repository:
 
 	python ver2poly.py Verilog_Benchmarks/<filename>.v
 
+	Although this script works fine for the benchmarks given in Verilog_benchmarks, due to time constraints for the project the script has not been tested for other verilog benchmarks and it might be buggy. 
+	If the .v file has few variabels and assign statements, consider writing its .poly instead. 
+
 	6. chk_2.py: Was used to check the solutions generated. Not part of the project.
+
+	
 	

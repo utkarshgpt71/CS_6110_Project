@@ -2,15 +2,20 @@ module poly5X3 ();
 
 input [15:0] x,y;
 
-wire [15:0] a = x + y;
+wire [15:0] a;
 //wire [15:0] b = x - y;
-wire [15:0] c = x*y;
-wire [15:0] d = x*x + y*y;
+wire [15:0] c ;
+wire [15:0] d;
 //wire [15:0] e = c + y;
-
+output [15:0] f1;
+output [15:0] g1;
 //f1
-output [15:0] f1 = -17*x*x*x -17*y*y*y -28*x*x*y -28*x*y*y + 28*x*x +28*y*y + 74*x*y + 74*x +74*y -74;  
-output [15:0] g1 = -17*(x*x*x + y*y*y) - 28*(a*c - d) + 74*(a + c) -74;  
+
+assign a = x + y;
+assign c = x*y;
+assign d = x*x + y*y;
+assign f1 = -17*x*x*x -17*y*y*y -28*x*x*y -28*x*y*y + 28*x*x +28*y*y + 74*x*y + 74*x +74*y -74;  
+assign g1 = -17*(x*x*x + y*y*y) - 28*(a*c - d) + 74*(a + c) -74;  
 oldmiter(f1,g1);
 
 //output [15:0] f2 = 33*x*x*x -17*y*y*y +14*x*x*y -14*x*y*y -14*x*x +28*y*y -12*x*y -105*x -12*y +12;
