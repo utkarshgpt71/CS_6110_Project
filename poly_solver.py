@@ -256,28 +256,28 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 		var_sol.append( prev_sol[i] + curr_sol[i]*(2**(m-1)) )
 
 	#### Checking if current solution is actually valid ####	
-	v = 1
-	for i in range(len(var_sol)):
-		if(var_sol[i] >= 2**var_bw[i]):
-			v = 0
-			break
-	if v == 1:
-		sol[m-1].append(var_sol)
-		if m == cm:
-			print '\nCirciuts are not equivalent for the following solution set:\n'
-			print var
-			print sol[m-1][0]
-			print '\nSolution space explored so far'
-			print_sol(var,sol)
-			exit()
+	# v = 1
+	# for i in range(len(var_sol)):
+	# 	if(var_sol[i] >= 2**var_bw[i]):
+	# 		v = 0
+	# 		break
+	# if v == 1:
+ 	sol[m-1].append(var_sol)
+	if m == cm:
+		print '\nCirciuts are not equivalent for the following solution set:\n'
+		print var
+		print sol[m-1][0]
+		print '\nSolution space explored so far'
+		print_sol(var,sol)
+		exit()
 	########################################################
 	
-	if v == 1: #Try lifting the solution only if it is valid
-		l_ast_tmp = []
-		for i in range(len(b_tvar)):
-			l_ast_tmp.append([])
+	# if v == 1: #Try lifting the solution only if it is valid
+	l_ast_tmp = []
+	for i in range(len(b_tvar)):
+		l_ast_tmp.append([])
 
-		lift(l_ast_tmp, var_sol, m+1, J_eval, [], 0) #Subsequent Lifts
+	lift(l_ast_tmp, var_sol, m+1, J_eval, [], 0) #Subsequent Lifts
 
 	#If the current solution is not valid try finding other solutions
 	for i in range(len(curr_sol)):
