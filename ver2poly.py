@@ -31,6 +31,81 @@ line_no = 1
 var_index = 0
 int_var_count = 0
 
+def conditionals(expr):
+	global var_dir
+	global var_bw
+	global func
+	global var
+	global int_var_count
+	global var_index
+
+	#print 'Hello'
+	if expr.find('<',0,len(expr)) != -1:
+		co = '<'; ct = 1
+	elif expr.find('>',0,len(expr)) != -1:
+		co = '>' ; ct = 2
+	elif expr.find('<=',0,len(expr)) != -1:
+		co = '<=' ; ct = 3
+	elif expr.find('>=',0,len(expr)) != -1:
+		co = '>=' ; ct = 4
+
+	expr1 = expr.split(co)
+	c1 = expr1[0].strip()
+	c2 = expr1[1].strip()
+
+	try:
+			assert( var_bw[var_dir[c1]] == var_bw[var_dir[c2]] )
+	except:
+		print "Error in the comparison command"
+		print "Might be due to bit-width mismatch of input arguments"
+		f.close()
+		exit()
+	
+	mod = var_bw[var_dir[c1]]
+	var.append('it%d' %int_var_count)
+	var_bw.append(2)
+	var_dir[var[-1]] = len(var)-1
+	int_var_count += 1
+
+	var.append('it%d' %int_var_count)
+	var_bw.append(mod+1)
+	var_dir[var[-1]] = len(var)-1
+	int_var_count += 1
+
+	var.append('it%d' %int_var_count)
+	var_bw.append(mod)
+	var_dir[var[-1]] = len(var)-1
+	int_var_count += 1
+
+	c = var[len(var)-3] ; t1 = var[len(var)-2] ; t2 = var[len(var)-1]
+
+	if ct == 1: # less than
+		poly = '%s - (%s - %s) ; %d' %(t1,c1,c2,mod+1)
+		func.append(poly)
+		poly = '%s - ( (1-%s)*%s + %s*(%d - 1 - %s) ) ; %d' %(t1,c,t2,c,(2**(mod+1)),t2,mod+1)
+		func.append(poly)
+
+	elif ct == 2: # greater than
+		poly = '%s - (%s - %s - 1) ; %d' %(t1, c1, c2, mod+1)
+		func.append(poly)
+		poly = '%s - ( %s*%s + (1-%s)*(%d - 1 - %s) ) ; %d' (t1,c,t2,c,(2**(mod+1)),t2,mod+1)
+		func.append(poly)
+	
+	elif ct == 3: #less than or equal to
+		poly = '%s - (%s - %s) ; %d' %(t1,c1,c2,mod+1)
+		func.append(poly)
+		poly = '%s - ( %s*%s + (1-%s)*(%d - 1 - %s) ) ; %d' %(t1,c,t2,c,(2**(mod+1)),t2,mod+1)
+		func.append(poly)
+
+	elif ct == 4:
+		poly = '%s - (%s - %s - 1) ; %d' %(t1, c1, c2, mod+1)
+		func.append(poly)
+		poly = '%s - ( (1-%s)*%s + %s*(%d - 1 - %s) ) ; %d' (t1,c,t2,c,(2**(mod+1)),t2,mod+1)
+		func.append(poly)
+	return ( len(var) - 3 )
+
+
+
 for line in f.readlines():
 	line = line.strip()
 
@@ -103,10 +178,18 @@ for line in f.readlines():
 				exit()
 				print 'Modulus not supported'
 			elif poly_unp.find('?',0,len(poly_unp)) != -1 and poly_unp.find(':',0,len(poly_unp)):
-				print 'Ternary operator'
-				
+				expr = poly_unp.split('?')[0].strip()
+				expr = expr.strip(')').strip()
+				expr = expr.strip('(').strip()
+				c_index = conditionals(expr)
+				IF = poly_unp.split('?')[1]
+				ELSE = IF.split(':')[1]
+				IF = IF.split(':')[0]
+				poly = '%s - %s*(%s) - (1-%s)*%s ; %d' %(out_var, var[c_index],IF, var[c_index], ELSE, mod)
+				func.append(poly)
+
 			else:
-				poly = '%s - %s ; %d' %(out_var, poly_unp, mod)
+				poly = '%s - (%s) ; %d' %(out_var, poly_unp, mod)
 				func.append(poly)
 
 
@@ -123,21 +206,22 @@ for line in f.readlines():
 				print "Might be due to bit-width mismatch of input arguments"
 				f.close()
 				exit()
-			poly = 'it%d*(%s - %s) - %d ; %d' %(int_var_count, c1, c2, 2**(var_bw[var_dir[c1]]-1), var_bw[var_dir[c1]] )
-			func.append(poly)
+			
 			var.append('it%d' %int_var_count)
 			var_bw.append(var_bw[var_dir[c1]])
-			var_dir[var[-1]] = var_index
+			var_dir[var[-1]] = len(var)-1
+			poly = 'it%d*(%s - %s) - %d ; %d' %(int_var_count, c1, c2, 2**(var_bw[var_dir[c1]]-1), var_bw[var_dir[c1]] )
 			int_var_count += 1
-			var_index += 1
+			func.append(poly)
+			#var_index += 1
 			#print poly
 
 f.close()					
-print var_bw
-print var
-print var_dir
-print len(var)
-print func	
+#print var_bw
+#print var
+#print var_dir
+#print len(var)
+#print func	
 
 g = open(poly_file, 'w')
 

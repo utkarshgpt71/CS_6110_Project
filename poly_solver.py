@@ -212,7 +212,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 			for i in range(len(b_tvar)):
 				l_ast_tmp.append([])
 
-			lift(l_ast_tmp, var_sol, m+1, J_eval, J_inv, 1)
+			lift(l_ast_tmp, var_sol, m+1, J_eval, J_inv, 1) #Subsequent Lifts
 	#########################################################################
 
 	eqn_m = func_m_eval + J_eval*sym_t_m*(2**(m-1))
@@ -234,6 +234,12 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 	for i in range(len(l_ast)):
 		for j in range(len(l_ast[i])):
 			btor.Assume(b_tvar[i] != l_ast[i][j])
+
+	## OPTIMIZATION ##
+	for i in range(len(b_tvar)):
+		if m > var_bw[i]:
+			btor.Assume(b_tvar[i] == 0) 
+	##################
 
 	result = btor.Sat()
 
@@ -271,7 +277,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 		for i in range(len(b_tvar)):
 			l_ast_tmp.append([])
 
-		lift(l_ast_tmp, var_sol, m+1, J_eval, [], 0)
+		lift(l_ast_tmp, var_sol, m+1, J_eval, [], 0) #Subsequent Lifts
 
 	#If the current solution is not valid try finding other solutions
 	for i in range(len(curr_sol)):
@@ -341,7 +347,11 @@ def solve(ast):
 	for i in range(len(b_tvar)):
 		l_ast.append([])	
 
-	if isinvertible(J_eval):
+	#print 'In solve'
+	#print var
+	#print curr_sol
+
+ 	if isinvertible(J_eval): # Lifting the current solution
 		J_inv = invert_mod2(J_eval)
 		lift(l_ast, curr_sol, 2, J_eval, J_inv, 1)
 	else:
