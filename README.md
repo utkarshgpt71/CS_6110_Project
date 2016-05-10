@@ -1,6 +1,6 @@
 # CS 6110 Project
 
-Author: Utkarsh Gupta
+Author: Utkarsh Gupta (utkarshgpt71@gmail.com)
 
 Affiliation: University of Utah 
 
