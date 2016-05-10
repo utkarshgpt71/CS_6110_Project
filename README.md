@@ -45,18 +45,21 @@ Following is a brief description of Files and Directories in this Repository:
 
 	3. Verilog_Benchmarks: Contains some verilog benchmarks that are fed as input to the python script ver2poly.py. Also contains a README for description about the format of .v files.
 
-	4. poly_solver.py: Takes in a .poly file that has specification of the polynomials and variables. This script solves the set of equations using the Hensel's Lemma. Returns message to indicate whether the set of equations have a solution. Can be executed as follows:
+	4. Inter_Poly_Inputs: Contains the .poly files that the ver2poly.py generated.
 
-	python poly_solver.py Poly_Inputs/<filename>.poly
+	5. poly_solver.py: Takes in a .poly file that has specification of the polynomials and variables. This script solves the set of equations using the Hensel's Lemma. Returns message to indicate whether the set of equations have a solution. Can be executed as follows:
 
-	5. ver2poly: Converts the .v files in Verilog_Benchmarks to .poly format and writes them in a directory Inter_Poly_Inputs. This script has a very limited support for the types of operators mentioned in the .v files. Can be executed as follows:
+	python poly_solver.py Poly_Inputs/<filename>.poly 					OR
+	python poly_solver.py Inter_Poly_inpits/<filename>.poly             These inputs will not run to completion
+
+	6. ver2poly: Converts the .v files in Verilog_Benchmarks to .poly format and writes them in a directory Inter_Poly_Inputs. This script has a very limited support for the types of operators mentioned in the .v files. Can be executed as follows:
 
 	python ver2poly.py Verilog_Benchmarks/<filename>.v
 
 	Although this script works fine for the benchmarks given in Verilog_benchmarks, due to time constraints for the project the script has not been tested for other verilog benchmarks and it might be buggy. 
 	If the .v file has few variabels and assign statements, consider writing its .poly instead. 
 
-	6. chk_2.py: Was used to check the solutions generated. Not part of the project.
+	7. chk_2.py: Was used to check the solutions generated. Not part of the project.
 
 	
 	
