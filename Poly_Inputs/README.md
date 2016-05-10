@@ -4,7 +4,7 @@ If your set of equations have n variables, then use the first n lines to write t
 
 x[1:0]
 
-After writing down all the variables, specify the polynomials and their moduli. For example, if there is a equation in x and y with a modulus 3, you can specify as
+After writing down all the variables, specify the equations and their moduli. For example, if there is a equation in x and y with a modulus 3, you can specify as
 
 x**2 + 3*y ; 3
 
