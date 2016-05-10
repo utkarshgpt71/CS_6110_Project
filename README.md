@@ -6,7 +6,7 @@ Affiliation: University of Utah
 
 Application: Verification of Arithmetic Datapaths.
 
-I. Boolector Python API:
+## I. Boolector Python API
 
 Please follow the following steps for installing the Boolector Python API:
 
@@ -34,4 +34,10 @@ Please follow the following steps for installing the Boolector Python API:
 	8. You should receive a message "Compiled Boolector Python module. Please read api/python/README on how to use the module"
 
 	9. Add the current directory to PYTHONPATH
+
+## Files/Directories in this repository
+
+Following is a brief description of Files and Directories in this Repository:
+
+	1. Misc: 
 	
