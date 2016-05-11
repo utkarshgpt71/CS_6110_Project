@@ -3,6 +3,7 @@ from sympy import *
 from boolector import Boolector
 import time
 import copy
+import time
 
 btor = Boolector();
 btor.Set_opt("model_gen", 1)
@@ -184,7 +185,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 
 	##################### If the J inverse exists ###########################
 	if inv == 1: 
-		print 'Inverse Exists'
+		#print 'Inverse Exists'
 		for i in range(len(func_m_eval)):
 			func_m_eval[i] = func_m_eval[i]/(2**(m-1))
 		T = -J_inv*(func_m_eval)
@@ -202,6 +203,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 		if v == 1: #Adding only valid solutions and trying to lift them
 			sol[m-1].append(var_sol)
 			if m == cm:
+				print 'Execution Time = %s s' %str(time.time() - time_0)
 				print '\nCirciuts are not equivalent for the following solution set:\n'
 				print var
 				print sol[m-1][0]
@@ -264,6 +266,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 	# if v == 1:
  	sol[m-1].append(var_sol)
 	if m == cm:
+		print 'Execution Time = %s s' %str(time.time() - time_0)
 		print '\nCirciuts are not equivalent for the following solution set:\n'
 		print var
 		print sol[m-1][0]
@@ -332,6 +335,7 @@ def solve(ast):
 
 	sol[0].append(curr_sol)
 	if cm == 1:
+		print 'Execution Time = %s s' %str(time.time() - time_0)
 		print '\nCirciuts are not equivalent for the following solution set:\n'
 		print var
 		print sol[m-1][0]
@@ -409,6 +413,7 @@ for i in range(len(var)):
 	ast.append([])
 
 if result != 10: #If no solution exists modulo 2
+	print 'Execution Time = %s s' %str(time.time() - time_0)
 	print 'No solution mod 2'
 	print 'The circuits are equivalent'
 	exit()
@@ -451,7 +456,9 @@ b_eqn = []
 for i in range(len(func)): #No. of equations = No. of functions
 	b_eqn.append( btor.Var(cm+1 , 'eqn'+str(i+1)) )
 
+time_0 = time.time()
 solve(ast)
+print 'Execution Time = %s s' %str(time.time() - time_0)
 print '\nCircuits are equivalent\n'
 print 'Solution space explored:'
 print_sol(var,sol)
