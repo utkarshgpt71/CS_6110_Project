@@ -51,6 +51,8 @@ Following is a brief description of Files and Directories in this Repository:
 
 	python poly_solver.py Poly_Inputs/<filename>.poly 					OR
 	python poly_solver.py Inter_Poly_inpits/<filename>.poly             These inputs will not run to completion
+	
+	For inputs that run longer than 10 seconds, the script will print out information about no. of solutions every 10 seconds. It also writes out a tmp.log file with the same information. 
 
 	6. ver2poly: Converts the .v files in Verilog_Benchmarks to .poly format and writes them in a directory Inter_Poly_Inputs. This script has a very limited support for the types of operators mentioned in the .v files. Can be executed as follows:
 
