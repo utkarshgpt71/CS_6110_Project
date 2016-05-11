@@ -4,10 +4,24 @@ from boolector import Boolector
 import time
 import copy
 import time
+import thread
 
 btor = Boolector();
 btor.Set_opt("model_gen", 1)
 btor.Set_opt("incremental", 1)
+
+def monitor(delay):
+	global sol
+	global log_file
+	count = 0
+	while count < 5:
+		time.sleep(delay)
+		print '\nTime elapsed = %s\n' %str(time.time() - time_0)
+		log_file.write('\nTime elapsed = %s\n' %str(time.time() - time_0))
+		for k in range(len(sol)):
+			print 'Total Solutions as of now Mod %d = %d' %(2**(k+1),len(sol[k]) )
+			log_file.write('\nTotal Solutions as of now Mod %d = %d' %(2**(k+1),len(sol[k]) ))
+
 
 def isint(v):
 	try:
@@ -123,6 +137,10 @@ input_file = sys.argv[1]
 f = open(input_file,'r')
 func = []
 
+log_file = open('tmp.log','w')
+
+log_file.write('%s\n\n' %input_file)
+
 mod = []
 var  = []
 var_bw = []
@@ -209,6 +227,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 				print sol[m-1][0]
 				print '\nSolution space explored so far'
 				print_sol(var,sol)
+				log_file.close()
 				exit()
 			l_ast_tmp = []
 			for i in range(len(b_tvar)):
@@ -272,6 +291,7 @@ def lift(l_ast, prev_sol, m, J_eval, J_inv, inv):
 		print sol[m-1][0]
 		print '\nSolution space explored so far'
 		print_sol(var,sol)
+		log_file.close()
 		exit()
 	########################################################
 	
@@ -341,6 +361,7 @@ def solve(ast):
 		print sol[m-1][0]
 		print '\nSolution space explored so far:'
 		print_sol(var,sol)
+		log_file.close()
 		exit()
 
 	J_eval = J
@@ -416,6 +437,7 @@ if result != 10: #If no solution exists modulo 2
 	print 'Execution Time = %s s' %str(time.time() - time_0)
 	print 'No solution mod 2'
 	print 'The circuits are equivalent'
+	log_file.close()
 	exit()
 
 #################### Setting up J #############
@@ -457,12 +479,14 @@ for i in range(len(func)): #No. of equations = No. of functions
 	b_eqn.append( btor.Var(cm+1 , 'eqn'+str(i+1)) )
 
 time_0 = time.time()
+thread.start_new_thread( monitor, (10,) )
 solve(ast)
 print 'Execution Time = %s s' %str(time.time() - time_0)
 print '\nCircuits are equivalent\n'
 print 'Solution space explored:'
 print_sol(var,sol)
-
+log_file.close()
+exit()
 #############################################
 
 ############################################################################
